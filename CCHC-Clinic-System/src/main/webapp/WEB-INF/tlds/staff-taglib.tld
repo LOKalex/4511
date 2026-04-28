@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<taglib xmlns="http://java.sun.com/xml/ns/j2ee"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee web-jsptaglibrary_2_0.xsd"
+        version="2.0">
+
+    <tlib-version>1.0</tlib-version>
+    <jsp-version>2.0</jsp-version>
+    <short-name>staff</short-name>
+    <uri>/WEB-INF/tlds/staff-taglib.tld</uri>
+    <description>Custom Tag Library for CCHC Clinic Staff Module</description>
+
+    <!-- Appointment Status Tag -->
+    <tag>
+        <name>appointmentStatus</name>
+        <tag-class>ict.tag.AppointmentStatusTag</tag-class>
+        <body-content>empty</body-content>
+        <description>Formats and styles appointment status with Bootstrap badges</description>
+        <attribute>
+            <name>status</name>
+            <required>true</required>
+            <type>java.lang.String</type>
+            <rtexprvalue>true</rtexprvalue>
+            <description>Appointment status value from database</description>
+        </attribute>
+    </tag>
+
+    <!-- Queue Status Tag -->
+    <tag>
+        <name>queueStatus</name>
+        <tag-class>ict.tag.QueueStatusTag</tag-class>
+        <body-content>empty</body-content>
+        <description>Formats and styles walk-in queue status with Bootstrap badges</description>
+        <attribute>
+            <name>status</name>
+            <required>true</required>
+            <type>java.lang.String</type>
+            <rtexprvalue>true</rtexprvalue>
+            <description>Queue status value from database</description>
+        </attribute>
+    </tag>
+
+</taglib>
