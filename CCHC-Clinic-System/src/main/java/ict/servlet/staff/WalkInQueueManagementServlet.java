@@ -3,11 +3,8 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
 package ict.servlet.staff;
-
 import ict.bean.User;
-import ict.bean.WalkInQueue;
-import ict.dao.WalkInQueueDAO;
-
+import ict.db.cchc_clinic;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -22,57 +19,56 @@ import java.sql.Date;
  */
 @WebServlet(name = "WalkInQueueManagementServlet", urlPatterns = {"/staffServlet/queueManagement"})
 public class WalkInQueueManagementServlet extends HttpServlet {
-    private WalkInQueueDAO walkInQueueDAO;
-
-    @Override
-    public void init() {
-        walkInQueueDAO = new WalkInQueueDAO();
-    }
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        // Get current logged-in staff from session
         HttpSession session = request.getSession();
         User currentStaff = (User) session.getAttribute("currentUser");
         int clinicId = currentStaff.getAssignedClinicId();
-
+        
+        // Get form parameters from request
         String action = request.getParameter("action");
         int queueId = request.getParameter("queueId") != null ? Integer.parseInt(request.getParameter("queueId")) : 0;
         int serviceId = Integer.parseInt(request.getParameter("serviceId"));
         Date currentDate = new Date(System.currentTimeMillis());
 
+        // Fully align with the database logic of LoginServlet
+        cchc_clinic db = new cchc_clinic("jdbc:mysql://localhost:3306/cchc_clinic", "root", "password");
+        
         try {
             boolean isSuccess = false;
+            // Execute different queue operations based on action type
             switch (action) {
                 case "CALL_NEXT":
-                    // Get next waiting patient and mark as CALLED
-                    WalkInQueue nextPatient = walkInQueueDAO.getNextWaitingPatient(clinicId, serviceId, currentDate);
+                    // Retrieve next waiting patient and mark as CALLED
+                    String[] nextPatient = db.getNextWaitingPatient(clinicId, serviceId, currentDate);
                     if (nextPatient != null) {
-                        isSuccess = walkInQueueDAO.updateQueueStatus(nextPatient.getQueueId(), "CALLED");
+                        isSuccess = db.updateQueueStatus(Integer.parseInt(nextPatient[0]), "CALLED");
                     }
                     break;
                 case "SKIP":
                     // Mark current patient as SKIPPED
-                    isSuccess = walkInQueueDAO.updateQueueStatus(queueId, "SKIPPED");
+                    isSuccess = db.updateQueueStatus(queueId, "SKIPPED");
                     break;
                 case "COMPLETED":
-                    // Mark patient as COMPLETED
-                    isSuccess = walkInQueueDAO.updateQueueStatus(queueId, "COMPLETED");
+                    // Mark patient visit as COMPLETED
+                    isSuccess = db.updateQueueStatus(queueId, "COMPLETED");
                     break;
                 case "EXPIRED":
-                    // Mark patient as EXPIRED
-                    isSuccess = walkInQueueDAO.updateQueueStatus(queueId, "EXPIRED");
+                    // Mark patient queue entry as EXPIRED
+                    isSuccess = db.updateQueueStatus(queueId, "EXPIRED");
                     break;
             }
-
-            // Redirect back to queue management page (PRG pattern)
+            // Redirect back to queue management page (follows PRG pattern)
             if (isSuccess) {
                 response.sendRedirect(request.getContextPath() + "/staff/walkin-queue-management.jsp?success=1");
             } else {
                 response.sendRedirect(request.getContextPath() + "/staff/walkin-queue-management.jsp?error=1");
             }
-
         } catch (Exception e) {
             e.printStackTrace();
+            // Redirect to generic error page on exception
             response.sendRedirect(request.getContextPath() + "/common/error.jsp?message=Failed to process queue action");
         }
     }
